@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Elevate Education — External Visibility Tracker</title>
+<style>
+  :root{
+    --plum-900:#2E0F35; --plum-700:#3D1A42; --plum-500:#5C2A63; --plum-100:#EFE6F0;
+    --gold-600:#B08D3F; --gold-400:#C9A85E; --gold-100:#F6EFDD;
+    --ink:#2A2530; --ink-soft:#6B6470; --line:#E6E1E6; --bg:#FDFCFA; --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+
+  header{position:relative;background:#fff;padding:26px 36px 22px;border-bottom:3px solid var(--plum-900);overflow:hidden;}
+  header::after{content:"";position:absolute;top:0;right:0;width:220px;height:100%;
+    background:linear-gradient(135deg, transparent 48%, var(--gold-400) 48.5%, var(--gold-400) 60%, var(--plum-900) 60.5%);
+    opacity:.85;}
+  .brand-row{display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+  .brand-mark{display:flex;flex-direction:column;gap:2px;}
+  .brand-mark span{display:block;width:22px;height:4px;background:var(--gold-600);border-radius:1px;}
+  .brand-mark span:nth-child(2){width:16px;}
+  .brand-mark span:nth-child(3){width:10px;}
+  header h1{margin:2px 0 4px;font-size:20px;font-weight:700;color:var(--plum-900);position:relative;z-index:1;}
+  header p{margin:0;font-size:13px;color:var(--ink-soft);position:relative;z-index:1;}
+
+  .tabs{display:flex;gap:4px;padding:0 36px;background:#fff;border-bottom:1px solid var(--line);}
+  .tab-btn{border:none;background:none;padding:12px 18px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;border-bottom:3px solid transparent;}
+  .tab-btn.active{color:var(--plum-900);border-bottom-color:var(--gold-600);}
+  .tab-btn:hover{color:var(--plum-700);}
+
+  main{max-width:1200px;margin:0 auto;padding:24px 24px 60px;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .summary{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+  .summary .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:110px;}
+  .summary .stat b{display:block;font-size:22px;color:var(--plum-700);}
+  .summary .stat span{font-size:11.5px;color:var(--ink-soft);}
+  .save-indicator{margin-left:auto;font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;align-self:center;}
+  .save-dot{width:7px;height:7px;border-radius:50%;background:#7BAE7F;flex-shrink:0;}
+
+  .ws{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden;}
+  .ws-head{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;cursor:pointer;background:var(--plum-100);}
+  .ws-head:hover{background:#E6D9E8;}
+  .ws-title{display:flex;align-items:center;gap:10px;}
+  .ws-num{background:var(--plum-700);color:#fff;font-size:12px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ws-title h2{margin:0;font-size:15px;font-weight:700;color:var(--plum-900);}
+  .ws-count{font-size:11.5px;color:var(--ink-soft);}
+  .chev{transition:transform .15s ease;color:var(--plum-700);font-size:12px;}
+  .ws.collapsed .chev{transform:rotate(-90deg);}
+  .ws.collapsed .ws-body{display:none;}
+
+  table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft);padding:9px 10px;border-bottom:1px solid var(--line);background:#FAF8F5;}
+  tbody td{padding:7px 10px;border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FCFAF7;}
+
+  th.col-move, td.col-move{width:56px;}
+  th.col-task, td.col-task{width:27%;}
+  th.col-owner, td.col-owner{width:11%;}
+  th.col-status, td.col-status{width:11%;}
+  th.col-timeline, td.col-timeline{width:12%;}
+  th.col-comments, td.col-comments{width:20%;}
+  th.col-del, td.col-del{width:36px;}
+
+  .move-btns{display:flex;gap:2px;}
+  .icon-btn{border:1px solid var(--line);background:#fff;border-radius:5px;width:22px;height:22px;font-size:11px;color:var(--ink-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+  .icon-btn:hover{background:var(--plum-100);color:var(--plum-700);border-color:var(--plum-500);}
+  .icon-btn.del:hover{background:#FBE9E9;color:#B23A3A;border-color:#B23A3A;}
+  .icon-btn:disabled{opacity:.3;cursor:default;}
+
+  select, input[type=text], textarea{
+    width:100%;font-size:12px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font-family:inherit;
+  }
+  textarea{resize:vertical;min-height:32px;}
+  select{cursor:pointer;}
+  select:focus, input[type=text]:focus, textarea:focus{outline:none;border-color:var(--plum-500);box-shadow:0 0 0 2px var(--plum-100);}
+  select.status-not{color:var(--ink-soft);}
+  select.status-progress{color:var(--gold-600);font-weight:600;}
+  select.status-blocked{color:#B23A3A;font-weight:600;}
+  select.status-done{color:#2F7A4D;font-weight:600;}
+
+  .add-task-row{padding:10px 18px;border-top:1px solid var(--line);}
+  .add-task-btn{border:1px dashed var(--plum-500);background:none;color:var(--plum-700);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:7px;cursor:pointer;}
+  .add-task-btn:hover{background:var(--plum-100);}
+
+  .oq-intro{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;}
+  .oq-intro h2{margin:0 0 3px;font-size:16px;color:var(--plum-900);}
+  .oq-intro p{margin:0;font-size:12.5px;color:var(--ink-soft);}
+  .oq-list{display:flex;flex-direction:column;gap:14px;}
+  .oq-item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
+  .oq-row{display:flex;gap:10px;align-items:flex-start;}
+  .oq-num{background:var(--gold-100);color:var(--gold-600);font-weight:700;font-size:12px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+  .oq-row textarea{flex:1;border:none;background:none;font-size:13.5px;line-height:1.55;padding:2px 0;min-height:22px;}
+  .oq-row textarea:focus{box-shadow:none;border-bottom:1px solid var(--plum-500);}
+  .oq-response{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);margin-left:34px;}
+  .oq-response-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft);margin-bottom:5px;}
+  .oq-response textarea{border:1px solid var(--line);background:var(--gold-100);border-radius:7px;padding:8px 10px;font-size:13px;line-height:1.5;min-height:32px;}
+  .oq-response textarea:focus{border-color:var(--gold-600);box-shadow:0 0 0 2px var(--gold-100);}
+  .add-oq-btn{margin-top:14px;border:1px dashed var(--plum-500);background:none;color:var(--plum-700);font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:8px;cursor:pointer;}
+  .add-oq-btn:hover{background:var(--plum-100);}
+
+  .footer-note{margin-top:20px;font-size:11px;color:var(--ink-soft);text-align:center;}
+  .loading{padding:40px;text-align:center;color:var(--ink-soft);font-size:13px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="brand-mark"><span></span><span></span><span></span></div>
+    <div>
+      <h1 style="margin:0;">Elevate Education</h1>
+    </div>
+  </div>
+  <p style="margin-top:8px;">External visibility & brand identity — project tracker · August – September</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="workstreams" onclick="switchTab('workstreams')">Workstreams</button>
+  <button class="tab-btn" data-tab="questions" onclick="switchTab('questions')">Open questions</button>
+</div>
+
+<main>
+  <div class="tab-panel active" id="panel-workstreams">
+    <div class="summary" id="summaryStats"></div>
+    <div id="wsContainer"><div class="loading">Loading tracker…</div></div>
+    <datalist id="ownerOptions"></datalist>
+  </div>
+
+  <div class="tab-panel" id="panel-questions">
+    <div class="oq-intro">
+      <div>
+        <h2>Open questions</h2>
+        <p>For discussion and decision with Ashish / Ankur / Piyush</p>
+      </div>
+    </div>
+    <div class="oq-list" id="oqList"></div>
+    <button class="add-oq-btn" onclick="addQuestion()">+ Add question</button>
+  </div>
+
+  <p class="footer-note">Synced live via Supabase — shared across everyone who opens this link.</p>
+</main>
+
+<script>
+const SUPABASE_URL = "https://ddjlfxagrykauqvryygo.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkamxmeGFncnlrYXVxdnJ5eWdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDk3OTUsImV4cCI6MjA5NzQyNTc5NX0.qElfu2ZSxV35hGY3-O31bZXONfRU3S1glqpfNWoA430";
+const REST = SUPABASE_URL + "/rest/v1";
+const BASE_HEADERS = {
+  "apikey": SUPABASE_KEY,
+  "Authorization": "Bearer " + SUPABASE_KEY,
+  "Content-Type": "application/json"
+};
+
+async function sbSelect(table, query){
+  const res = await fetch(`${REST}/${table}?${query}`, { headers: BASE_HEADERS });
+  if(!res.ok) throw new Error("select failed: " + res.status);
+  return res.json();
+}
+async function sbInsert(table, row){
+  const res = await fetch(`${REST}/${table}`, {
+    method: "POST",
+    headers: { ...BASE_HEADERS, "Prefer": "return=minimal" },
+    body: JSON.stringify(row)
+  });
+  if(!res.ok) throw new Error("insert failed: " + res.status);
+}
+async function sbUpsert(table, row, conflictCol){
+  const res = await fetch(`${REST}/${table}?on_conflict=${conflictCol}`, {
+    method: "POST",
+    headers: { ...BASE_HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify(row)
+  });
+  if(!res.ok) throw new Error("upsert failed: " + res.status);
+}
+async function sbUpdate(table, filterQuery, patch){
+  const res = await fetch(`${REST}/${table}?${filterQuery}`, {
+    method: "PATCH",
+    headers: { ...BASE_HEADERS, "Prefer": "return=minimal" },
+    body: JSON.stringify(patch)
+  });
+  if(!res.ok) throw new Error("update failed: " + res.status);
+}
+async function sbDelete(table, filterQuery){
+  const res = await fetch(`${REST}/${table}?${filterQuery}`, {
+    method: "DELETE",
+    headers: { ...BASE_HEADERS, "Prefer": "return=minimal" }
+  });
+  if(!res.ok) throw new Error("delete failed: " + res.status);
+}
+
+const OWNERS = ["—","Ashish","Ankur","Piyush","HR","S&I","IT","Design/Dev","Kashika","TBD"];
+const STATUSES = ["Not started","In progress","Blocked","Done"];
+const STATUS_CLASS = {"Not started":"status-not","In progress":"status-progress","Blocked":"status-blocked","Done":"status-done"};
+const TIMELINES = ["—","Aug Wk 1","Aug Wk 2","Aug Wk 3","Aug Wk 4","Sep Wk 1","Sep Wk 2","Sep Wk 3","Sep Wk 4"];
+
+let WORKSTREAMS = [];
+let QUESTIONS = [];
+let idCounter = 1000;
+const saveTimers = {};
+
+function setSaveState(state){
+  const dot = document.getElementById("saveDot");
+  if(!dot) return;
+  if(state==="saving") dot.style.background = "#D8A94D";
+  else if(state==="error") dot.style.background = "#B23A3A";
+  else dot.style.background = "#7BAE7F";
+}
+
+async function loadAll(){
+  let taskRows, qRows;
+  try{
+    taskRows = await sbSelect("elevate_visibility_tasks", "select=*&order=workstream_order.asc,task_order.asc");
+    qRows = await sbSelect("elevate_visibility_questions", "select=*&order=question_order.asc");
+  }catch(e){
+    document.getElementById("wsContainer").innerHTML = '<div class="loading">Could not load — check connection and refresh.</div>';
+    return;
+  }
+
+  const wsMap = new Map();
+  (taskRows||[]).forEach(row=>{
+    if(!wsMap.has(row.workstream_id)){
+      wsMap.set(row.workstream_id, { id: row.workstream_id, title: row.workstream_title, order: row.workstream_order, collapsed: row.workstream_collapsed, tasks: [] });
+    }
+    wsMap.get(row.workstream_id).tasks.push({
+      id: row.id, text: row.text, owner: row.owner, status: row.status, timeline: row.timeline, comments: row.comments, order: row.task_order
+    });
+  });
+  WORKSTREAMS = Array.from(wsMap.values()).sort((a,b)=>a.order-b.order);
+  WORKSTREAMS.forEach(ws=> ws.tasks.sort((a,b)=>a.order-b.order));
+
+  QUESTIONS = (qRows||[]).map(r=>({ id:r.id, text:r.text, response:r.response||"", order:r.question_order }));
+
+  renderWorkstreams();
+  renderQuestions();
+}
+
+function newTaskId(){ return "t" + Date.now() + "_" + (idCounter++); }
+function newQId(){ return "q" + Date.now() + "_" + (idCounter++); }
+
+function queueSave(key, fn){
+  clearTimeout(saveTimers[key]);
+  setSaveState("saving");
+  saveTimers[key] = setTimeout(async ()=>{
+    try{ await fn(); setSaveState("ok"); }
+    catch(e){ setSaveState("error"); }
+  }, 500);
+}
+
+function saveTaskField(task, wsId, wsIdx){
+  queueSave(task.id, async ()=>{
+    await sbUpsert("elevate_visibility_tasks", {
+      id: task.id,
+      workstream_id: wsId,
+      workstream_title: WORKSTREAMS[wsIdx].title,
+      workstream_order: WORKSTREAMS[wsIdx].order,
+      workstream_collapsed: WORKSTREAMS[wsIdx].collapsed,
+      task_order: task.order,
+      text: task.text,
+      owner: task.owner,
+      status: task.status,
+      timeline: task.timeline,
+      comments: task.comments
+    }, "id");
+  });
+}
+
+function saveWsCollapsed(ws){
+  queueSave("collapse_"+ws.id, async ()=>{
+    await sbUpdate("elevate_visibility_tasks", `workstream_id=eq.${ws.id}`, { workstream_collapsed: ws.collapsed });
+  });
+}
+
+function reorderTasks(ws, wsIdx){
+  ws.tasks.forEach((t,i)=> t.order = i+1);
+  queueSave("reorder_"+ws.id, async ()=>{
+    await Promise.all(ws.tasks.map(t => sbUpdate("elevate_visibility_tasks", `id=eq.${t.id}`, { task_order: t.order })));
+  });
+}
+
+async function deleteTask(taskId){
+  await sbDelete("elevate_visibility_tasks", `id=eq.${taskId}`);
+}
+
+async function addTaskToWs(ws){
+  const t = { id:newTaskId(), text:"", owner:"—", status:"Not started", timeline:"—", comments:"", order: ws.tasks.length+1 };
+  ws.tasks.push(t);
+  renderWorkstreams();
+  await sbInsert("elevate_visibility_tasks", {
+    id:t.id, workstream_id:ws.id, workstream_title:ws.title, workstream_order:ws.order, workstream_collapsed:ws.collapsed,
+    task_order:t.order, text:"", owner:"—", status:"Not started", timeline:"—", comments:""
+  });
+}
+
+function saveQuestionField(q){
+  queueSave(q.id, async ()=>{
+    await sbUpsert("elevate_visibility_questions", { id:q.id, question_order:q.order, text:q.text, response:q.response }, "id");
+  });
+}
+
+async function deleteQuestion(qId){
+  await sbDelete("elevate_visibility_questions", `id=eq.${qId}`);
+}
+
+async function addQuestion(){
+  const q = { id:newQId(), text:"", response:"", order: QUESTIONS.length+1 };
+  QUESTIONS.push(q);
+  renderQuestions();
+  await sbInsert("elevate_visibility_questions", { id:q.id, question_order:q.order, text:"", response:"" });
+}
+
+function switchTab(name){
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.tab===name));
+  document.getElementById("panel-workstreams").classList.toggle("active", name==="workstreams");
+  document.getElementById("panel-questions").classList.toggle("active", name==="questions");
+}
+
+function buildOwnerInput(value, onChange){
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = value;
+  input.setAttribute("list", "ownerOptions");
+  input.placeholder = "Owner or dept";
+  input.addEventListener("change", ()=>onChange(input.value));
+  input.addEventListener("blur", ()=>onChange(input.value));
+  return input;
+}
+
+function refreshOwnerOptions(){
+  const dl = document.getElementById("ownerOptions");
+  if(!dl) return;
+  const seen = new Set(OWNERS);
+  WORKSTREAMS.forEach(ws=> ws.tasks.forEach(t=>{ if(t.owner) seen.add(t.owner); }));
+  dl.innerHTML = "";
+  Array.from(seen).forEach(name=>{
+    if(name==="—") return;
+    const opt = document.createElement("option");
+    opt.value = name;
+    dl.appendChild(opt);
+  });
+}
+
+function buildSelect(options, value, onChange, className){
+  const sel = document.createElement("select");
+  if(className) sel.className = className;
+  options.forEach(o=>{
+    const opt = document.createElement("option");
+    opt.value = o; opt.textContent = o;
+    if(o===value) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener("change", ()=>onChange(sel.value, sel));
+  return sel;
+}
+
+function autoGrow(el){
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+function countDone(ws){ return ws.tasks.filter(t=>t.status==="Done").length; }
+
+function updateCounts(){
+  let total=0, done=0, progress=0, blocked=0;
+  WORKSTREAMS.forEach(ws=>{
+    ws.tasks.forEach(t=>{
+      total++;
+      if(t.status==="Done") done++;
+      if(t.status==="In progress") progress++;
+      if(t.status==="Blocked") blocked++;
+    });
+  });
+  const stats = document.getElementById("summaryStats");
+  stats.innerHTML = `
+    <div class="stat"><b>${total}</b><span>Total tasks</span></div>
+    <div class="stat"><b>${done}</b><span>Done</span></div>
+    <div class="stat"><b>${progress}</b><span>In progress</span></div>
+    <div class="stat"><b>${blocked}</b><span>Blocked</span></div>
+    <div class="save-indicator"><span class="save-dot" id="saveDot"></span>Synced</div>
+  `;
+}
+
+function renderWorkstreams(){
+  const container = document.getElementById("wsContainer");
+  container.innerHTML = "";
+  WORKSTREAMS.forEach((ws, wsIdx)=>{
+    const wsEl = document.createElement("div");
+    wsEl.className = "ws" + (ws.collapsed ? " collapsed" : "");
+
+    const head = document.createElement("div");
+    head.className = "ws-head";
+    head.onclick = ()=>{ ws.collapsed = !ws.collapsed; saveWsCollapsed(ws); renderWorkstreams(); };
+    head.innerHTML = `
+      <div class="ws-title"><div class="ws-num">${wsIdx+1}</div><h2></h2></div>
+      <div style="display:flex;align-items:center;gap:14px;"><span class="ws-count"></span><span class="chev">▾</span></div>
+    `;
+    head.querySelector("h2").textContent = ws.title;
+    wsEl.appendChild(head);
+
+    const body = document.createElement("div");
+    body.className = "ws-body";
+
+    const table = document.createElement("table");
+    table.innerHTML = `
+      <thead><tr>
+        <th class="col-move"></th>
+        <th class="col-task">Task</th>
+        <th class="col-owner">Owner</th>
+        <th class="col-status">Status</th>
+        <th class="col-timeline">Timeline</th>
+        <th class="col-comments">Comments</th>
+        <th class="col-del"></th>
+      </tr></thead>
+    `;
+    const tbody = document.createElement("tbody");
+
+    ws.tasks.forEach((task, tIdx)=>{
+      const tr = document.createElement("tr");
+
+      const moveTd = document.createElement("td"); moveTd.className="col-move";
+      const moveWrap = document.createElement("div"); moveWrap.className="move-btns";
+      const upBtn = document.createElement("button"); upBtn.className="icon-btn"; upBtn.textContent="▲";
+      upBtn.disabled = tIdx===0;
+      upBtn.onclick=(e)=>{ e.stopPropagation(); if(tIdx>0){ [ws.tasks[tIdx-1], ws.tasks[tIdx]] = [ws.tasks[tIdx], ws.tasks[tIdx-1]]; reorderTasks(ws, wsIdx); renderWorkstreams(); } };
+      const downBtn = document.createElement("button"); downBtn.className="icon-btn"; downBtn.textContent="▼";
+      downBtn.disabled = tIdx===ws.tasks.length-1;
+      downBtn.onclick=(e)=>{ e.stopPropagation(); if(tIdx<ws.tasks.length-1){ [ws.tasks[tIdx+1], ws.tasks[tIdx]] = [ws.tasks[tIdx], ws.tasks[tIdx+1]]; reorderTasks(ws, wsIdx); renderWorkstreams(); } };
+      moveWrap.appendChild(upBtn); moveWrap.appendChild(downBtn);
+      moveTd.appendChild(moveWrap);
+
+      const taskTd = document.createElement("td"); taskTd.className="col-task";
+      const taskInput = document.createElement("textarea"); taskInput.rows=1; taskInput.value = task.text;
+      taskInput.style.fontSize="12.5px"; taskInput.style.lineHeight="1.4";
+      taskInput.addEventListener("input", ()=>{ task.text = taskInput.value; autoGrow(taskInput); saveTaskField(task, ws.id, wsIdx); });
+      taskTd.appendChild(taskInput);
+
+      const ownerTd = document.createElement("td"); ownerTd.className="col-owner";
+      ownerTd.appendChild(buildOwnerInput(task.owner, (v)=>{ task.owner=v; saveTaskField(task, ws.id, wsIdx); refreshOwnerOptions(); }));
+
+      const statusTd = document.createElement("td"); statusTd.className="col-status";
+      const statusSel = buildSelect(STATUSES, task.status, (v, el)=>{ task.status=v; el.className = STATUS_CLASS[v]||""; saveTaskField(task, ws.id, wsIdx); updateCounts(); }, STATUS_CLASS[task.status]);
+      statusTd.appendChild(statusSel);
+
+      const timeTd = document.createElement("td"); timeTd.className="col-timeline";
+      timeTd.appendChild(buildSelect(TIMELINES, task.timeline, (v)=>{ task.timeline=v; saveTaskField(task, ws.id, wsIdx); }));
+
+      const commentsTd = document.createElement("td"); commentsTd.className="col-comments";
+      const commentsInput = document.createElement("input"); commentsInput.type="text"; commentsInput.placeholder="Add a note"; commentsInput.value = task.comments;
+      commentsInput.addEventListener("input", ()=>{ task.comments = commentsInput.value; saveTaskField(task, ws.id, wsIdx); });
+      commentsTd.appendChild(commentsInput);
+
+      const delTd = document.createElement("td"); delTd.className="col-del";
+      const delBtn = document.createElement("button"); delBtn.className="icon-btn del"; delBtn.textContent="✕";
+      delBtn.onclick=(e)=>{ e.stopPropagation(); ws.tasks.splice(tIdx,1); deleteTask(task.id); renderWorkstreams(); };
+      delTd.appendChild(delBtn);
+
+      tr.appendChild(moveTd); tr.appendChild(taskTd); tr.appendChild(ownerTd); tr.appendChild(statusTd); tr.appendChild(timeTd); tr.appendChild(commentsTd); tr.appendChild(delTd);
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    body.appendChild(table);
+
+    const addRow = document.createElement("div");
+    addRow.className = "add-task-row";
+    const addBtn = document.createElement("button");
+    addBtn.className = "add-task-btn";
+    addBtn.textContent = "+ Add task";
+    addBtn.onclick = ()=> addTaskToWs(ws);
+    addRow.appendChild(addBtn);
+    body.appendChild(addRow);
+
+    wsEl.appendChild(body);
+    head.querySelector(".ws-count").textContent = countDone(ws) + "/" + ws.tasks.length + " done";
+    container.appendChild(wsEl);
+  });
+
+  document.querySelectorAll("#wsContainer textarea").forEach(autoGrow);
+  updateCounts();
+  refreshOwnerOptions();
+}
+
+function renderQuestions(){
+  const list = document.getElementById("oqList");
+  list.innerHTML = "";
+  QUESTIONS.forEach((q, idx)=>{
+    const item = document.createElement("div");
+    item.className = "oq-item";
+
+    const row = document.createElement("div"); row.className = "oq-row";
+    const num = document.createElement("div"); num.className="oq-num"; num.textContent = idx+1;
+    const ta = document.createElement("textarea"); ta.rows=1; ta.value = q.text;
+    ta.addEventListener("input", ()=>{ q.text = ta.value; autoGrow(ta); saveQuestionField(q); });
+    const delBtn = document.createElement("button"); delBtn.className="icon-btn del"; delBtn.style.marginTop="2px"; delBtn.textContent="✕";
+    delBtn.onclick = ()=>{ QUESTIONS.splice(idx,1); deleteQuestion(q.id); renderQuestions(); };
+    row.appendChild(num); row.appendChild(ta); row.appendChild(delBtn);
+
+    const respWrap = document.createElement("div"); respWrap.className = "oq-response";
+    const respLabel = document.createElement("div"); respLabel.className = "oq-response-label"; respLabel.textContent = "Response / decision";
+    const respTa = document.createElement("textarea"); respTa.rows=1; respTa.placeholder = "Add response or decision"; respTa.value = q.response || "";
+    respTa.addEventListener("input", ()=>{ q.response = respTa.value; autoGrow(respTa); saveQuestionField(q); });
+    respWrap.appendChild(respLabel); respWrap.appendChild(respTa);
+
+    item.appendChild(row);
+    item.appendChild(respWrap);
+    list.appendChild(item);
+  });
+  document.querySelectorAll("#oqList textarea").forEach(autoGrow);
+}
+
+let refreshInFlight = false;
+async function softRefresh(){
+  if(refreshInFlight) return;
+  refreshInFlight = true;
+  try{ await loadAll(); } finally { refreshInFlight = false; }
+}
+
+loadAll();
+setInterval(()=>{
+  if(document.visibilityState === "visible") softRefresh();
+}, 8000);
+</script>
+
+</body>
+</html>
